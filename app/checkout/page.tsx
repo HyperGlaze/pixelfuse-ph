@@ -13,18 +13,26 @@ export default function Checkout() {
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    address: '', // Explicit address state field
+    address: '',
     city: 'meetup',
     paymentMethod: 'meetup',
   });
+
+  useEffect(() => {
+    setMounted(true);
+    const savedPreset = localStorage.getItem('userPreset');
+    if (savedPreset) {
+      try {
+        setFormData((prev) => ({ ...prev, ...JSON.parse(savedPreset) }));
+      } catch (e) {
+        console.error("Failed to parse user preset");
+      }
+    }
+  }, []);
 
   const [proofFile, setProofFile] = useState<File | null>(null);
 

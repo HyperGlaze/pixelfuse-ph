@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +9,15 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Supabase credentials missing' }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -25,18 +34,17 @@ export async function POST(request: Request) {
       });
 
     if (error) {
-      console.error('Supabase storage error:', error);
-      return NextResponse.json({ error: 'Failed to upload file to storage' }, { status: 500 });
+      throw error;
     }
     
     // Get public URL
-    const { data: publicUrlData } = supabase.storage
+    const publicUrl = supabase.storage
       .from('pixelfuse')
-      .getPublicUrl(filename);
+      .getPublicUrl(filename).data.publicUrl;
       
-    return NextResponse.json({ url: publicUrlData.publicUrl }, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+    return NextResponse.json({ url: publicUrl }, { status: 201 });
+  } catch (error: any) {
+    console.error('Upload API Error details:', error);
+    return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });
   }
 }
