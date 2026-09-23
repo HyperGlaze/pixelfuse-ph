@@ -1,13 +1,6 @@
 "use client";
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  image?: string;
-  category?: string;
-}
+import { Product } from '@/data/products';
 import { useCartStore } from '@/store/cartStore';
 import { ShoppingCart } from 'lucide-react';
 
