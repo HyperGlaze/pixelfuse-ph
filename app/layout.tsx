@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -22,9 +23,7 @@ export default function RootLayout({
         <main className="flex-grow">
           {children}
         </main>
-        <footer className="bg-gray-900 border-t border-gray-800 py-8 text-center text-gray-400">
-          <p>© {new Date().getFullYear()} PixelFuse PH. All rights reserved.</p>
-        </footer>
+        <Footer />
       </body>
     </html>
   );

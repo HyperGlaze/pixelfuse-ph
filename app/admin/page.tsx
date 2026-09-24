@@ -286,7 +286,6 @@ export default function AdminDashboard() {
             Access Dashboard
           </button>
         </form>
-        <p className="text-xs text-gray-500 mt-6">Default: admin / password123</p>
       </div>
     );
   }
