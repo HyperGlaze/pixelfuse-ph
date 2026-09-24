@@ -388,17 +388,35 @@ export default function AdminDashboard() {
                   className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   required
                 />
-                <select
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                  className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  required
-                >
-                  <option value="" disabled>Select Tag/Category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
+                <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-white">
+                  <p className="text-sm text-gray-400 mb-2 font-medium">Select Tags (Multiple)</p>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                    {categories.length === 0 && <span className="text-xs text-gray-500">No tags available. Add some in the Tags tab.</span>}
+                    {categories.map((c) => {
+                      const selectedTags = newProduct.category ? newProduct.category.split(',') : [];
+                      const isSelected = selectedTags.includes(c.name);
+                      return (
+                        <label key={c.id} className={`cursor-pointer px-3 py-1 rounded-full text-sm border transition-colors flex items-center gap-1 ${isSelected ? 'bg-purple-600/20 border-purple-500 text-purple-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'}`}>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              let newTags;
+                              if (e.target.checked) {
+                                newTags = [...selectedTags, c.name];
+                              } else {
+                                newTags = selectedTags.filter(t => t !== c.name);
+                              }
+                              setNewProduct({...newProduct, category: newTags.join(',')});
+                            }}
+                          />
+                          {c.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
@@ -448,7 +466,15 @@ export default function AdminDashboard() {
                           <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded bg-gray-900 border border-gray-700" />
                         </td>
                         <td className="px-4 py-3 font-medium text-white">{p.name}</td>
-                        <td className="px-4 py-3"><span className="bg-gray-900 px-2 py-1 rounded text-xs border border-gray-700">{p.category}</span></td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {p.category ? p.category.split(',').map((tag: string, i: number) => (
+                              <span key={i} className="bg-gray-900 px-2 py-1 rounded text-xs border border-gray-700 text-gray-300">
+                                {tag}
+                              </span>
+                            )) : <span className="text-gray-500 text-xs">No tags</span>}
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-purple-400 font-medium">₱{p.price}</td>
                         <td className="px-4 py-3">
                           <button
