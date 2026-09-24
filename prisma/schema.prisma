@@ -17,10 +17,18 @@ model Product {
   category    String
 }
 
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
 model Order {
   id            String   @id @default(cuid())
   customerName  String
   customerEmail String
+  customerPhone String?
+  facebookName  String?
+  facebookUrl   String?
   address       String?
   deliveryFee   Int      @default(0)
   items         String   // Storing as JSON string

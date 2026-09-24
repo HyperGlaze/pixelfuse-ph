@@ -51,14 +51,14 @@ export default function OrderHistory() {
       <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg mb-8">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label htmlFor="emailSearch" className="block text-sm font-medium text-gray-400 mb-1">Enter your email address</label>
+            <label htmlFor="emailSearch" className="block text-sm font-medium text-gray-400 mb-1">Enter your email address or phone number</label>
             <input
-              type="email"
+              type="text"
               id="emailSearch"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="juan@example.com"
+              placeholder="juan@example.com or 09123456789"
               required
             />
           </div>

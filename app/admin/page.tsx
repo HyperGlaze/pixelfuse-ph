@@ -7,14 +7,19 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"products" | "orders" | "account">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "account" | "categories">("products");
   
   // Data states
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
+  // Category Form State
+  const [newCategoryName, setNewCategoryName] = useState("");
+
   // Product Form states
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -72,13 +77,65 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const res = await fetch("/api/categories");
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
       fetchOrders();
+      fetchCategories();
     }
   }, [isAuthenticated]);
 
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName) return;
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName }),
+      });
+      if (res.ok) {
+        setNewCategoryName("");
+        fetchCategories();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Failed to add category");
+      }
+    } catch (error) {
+      console.error("Add category error", error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Delete this tag?")) return;
+    try {
+      const res = await fetch(`/api/categories?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchCategories();
+      } else {
+        alert("Failed to delete category");
+      }
+    } catch (error) {
+      console.error("Delete category error", error);
+    }
+  };
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const storedCreds = JSON.parse(localStorage.getItem("adminCreds") || "{}");
@@ -264,6 +321,15 @@ export default function AdminDashboard() {
                 <span>Orders</span>
               </button>
               <button
+                onClick={() => setActiveTab("categories")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                  activeTab === "categories" ? "bg-gray-800 text-purple-400" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <span className="font-bold">#</span>
+                <span>Tags</span>
+              </button>
+              <button
                 onClick={() => setActiveTab("account")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                   activeTab === "account" ? "bg-gray-800 text-purple-400" : "text-gray-400 hover:text-white"
@@ -322,14 +388,17 @@ export default function AdminDashboard() {
                   className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   required
                 />
-                <input
-                  type="text"
-                  placeholder="Category"
+                <select
                   value={newProduct.category}
                   onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
                   className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   required
-                />
+                >
+                  <option value="" disabled>Select Tag/Category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
                 <input
                   type="file"
                   accept="image/*"
@@ -488,6 +557,64 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Categories Tab */}
+        {activeTab === "categories" && (
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h1 className="text-2xl font-extrabold text-white text-center mb-8">Tag Manager</h1>
+            
+            <div className="bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl mb-6">
+              <h2 className="text-xl font-bold text-white mb-2">Add New Tag</h2>
+              <form onSubmit={handleAddCategory} className="flex gap-4">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="e.g. anime, cute, keychain..."
+                  required
+                />
+                <button
+                  type="submit"
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Add Tag
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Existing Tags</h2>
+                <button 
+                  onClick={fetchCategories}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingCategories ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {categories.length === 0 ? (
+                <p className="text-gray-400 text-center py-4">No tags found. Create one above.</p>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {categories.map((c) => (
+                    <div key={c.id} className="bg-gray-900 border border-gray-700 rounded-lg pl-4 pr-2 py-2 flex items-center gap-3">
+                      <span className="text-white font-medium">{c.name}</span>
+                      <button
+                        onClick={() => handleDeleteCategory(c.id)}
+                        className="text-red-400 hover:text-red-300 p-1 hover:bg-red-400/10 rounded transition-colors"
+                        title="Delete Tag"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

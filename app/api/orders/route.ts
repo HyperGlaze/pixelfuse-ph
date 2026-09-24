@@ -6,12 +6,17 @@ const prisma = new PrismaClient();
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
+    const query = searchParams.get('email'); // can be email or phone
 
     let orders;
-    if (email) {
+    if (query) {
       orders = await prisma.order.findMany({
-        where: { customerEmail: email },
+        where: { 
+          OR: [
+            { customerEmail: query },
+            { customerPhone: query }
+          ]
+        },
         orderBy: { createdAt: 'desc' }
       });
     } else {
@@ -35,6 +40,9 @@ export async function POST(request: Request) {
     // Safely extract and fallback values
     const customerName = body.customerName || 'Guest';
     const customerEmail = body.customerEmail || 'no-email@example.com';
+    const customerPhone = body.customerPhone || null;
+    const facebookName = body.facebookName || null;
+    const facebookUrl = body.facebookUrl || null;
     const address = body.address || 'N/A';
     const deliveryFee = Number(body.deliveryFee) || 0;
     const totalAmount = Number(body.totalAmount) || 0;
@@ -51,6 +59,9 @@ export async function POST(request: Request) {
       data: {
         customerName,
         customerEmail,
+        customerPhone,
+        facebookName,
+        facebookUrl,
         address,
         deliveryFee,
         items: itemsString,

@@ -12,6 +12,8 @@ export default function UserPreset() {
     name: '',
     email: '',
     phone: '',
+    facebookName: '',
+    facebookUrl: '',
     address: '',
     city: 'meetup',
     paymentMethod: 'meetup',
@@ -21,7 +23,7 @@ export default function UserPreset() {
     const savedInfo = localStorage.getItem('userPreset');
     if (savedInfo) {
       try {
-        setFormData(JSON.parse(savedInfo));
+        setFormData((prev) => ({ ...prev, ...JSON.parse(savedInfo) }));
       } catch (e) {
         console.error("Failed to parse user preset");
       }
@@ -58,7 +60,7 @@ export default function UserPreset() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">Full Name *</label>
               <input
                 type="text"
                 id="name"
@@ -67,10 +69,11 @@ export default function UserPreset() {
                 onChange={handleChange}
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Juan Dela Cruz"
+                required
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">Email Address *</label>
               <input
                 type="email"
                 id="email"
@@ -79,10 +82,38 @@ export default function UserPreset() {
                 onChange={handleChange}
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="juan@example.com"
+                required
               />
             </div>
           </div>
           
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="facebookName" className="block text-sm font-medium text-gray-400 mb-1">Facebook Name</label>
+              <input
+                type="text"
+                id="facebookName"
+                name="facebookName"
+                value={formData.facebookName}
+                onChange={handleChange}
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Juan Dela Cruz"
+              />
+            </div>
+            <div>
+              <label htmlFor="facebookUrl" className="block text-sm font-medium text-gray-400 mb-1">Facebook Profile Link</label>
+              <input
+                type="url"
+                id="facebookUrl"
+                name="facebookUrl"
+                value={formData.facebookUrl}
+                onChange={handleChange}
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="https://facebook.com/..."
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-400 mb-1">Phone Number</label>
@@ -113,7 +144,7 @@ export default function UserPreset() {
           </div>
 
           <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-400 mb-1">Default Address / Meetup Location</label>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-400 mb-1">Default Address / Meetup Location *</label>
             <input
               type="text"
               id="address"
@@ -122,6 +153,7 @@ export default function UserPreset() {
               onChange={handleChange}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="House No, Street, Barangay OR Campus building details"
+              required
             />
           </div>
         </div>

@@ -17,10 +17,14 @@ export default function Checkout() {
     name: '',
     email: '',
     phone: '',
+    facebookName: '',
+    facebookUrl: '',
     address: '',
     city: 'meetup',
     paymentMethod: 'meetup',
   });
+
+  const [confirmOrder, setConfirmOrder] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -57,6 +61,10 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!confirmOrder) {
+      alert("Please check the confirmation box to proceed.");
+      return;
+    }
     setIsSubmitting(true);
     
     try {
@@ -81,6 +89,9 @@ export default function Checkout() {
       const payload = {
         customerName: formData.name,
         customerEmail: formData.email,
+        customerPhone: formData.phone,
+        facebookName: formData.facebookName,
+        facebookUrl: formData.facebookUrl,
         address: formData.address, // Use explicit address
         deliveryFee: deliveryFee,
         items: items, // Frontend passes the array, API stringifies it
@@ -129,15 +140,16 @@ export default function Checkout() {
           <CheckCircle2 className="w-20 h-20 text-green-500" />
         </div>
         <h1 className="text-4xl font-bold text-white mb-4">Order Confirmed!</h1>
-        <p className="text-gray-400 text-lg mb-8">
-          Thank you for your order, {formData.name}. We'll contact you at {formData.phone} with further details. You can view your order status in the Order History page.
+        <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+          Thank you for your order, {formData.name}!<br />
+          We will contact you on your Facebook, phone number, or email to coordinate delivery/meetup. You can view your order status in the Track Order page.
         </p>
         <div className="flex justify-center gap-4">
           <Link 
             href="/history"
             className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-8 rounded-lg transition-colors inline-block"
           >
-            View Order History
+            Track Order
           </Link>
           <Link 
             href="/shop"
@@ -205,6 +217,33 @@ export default function Checkout() {
                 </div>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="facebookName" className="block text-sm font-medium text-gray-400 mb-1">Facebook Name</label>
+                  <input
+                    type="text"
+                    id="facebookName"
+                    name="facebookName"
+                    value={formData.facebookName}
+                    onChange={handleChange}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Juan Dela Cruz"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="facebookUrl" className="block text-sm font-medium text-gray-400 mb-1">Facebook Profile Link</label>
+                  <input
+                    type="url"
+                    id="facebookUrl"
+                    name="facebookUrl"
+                    value={formData.facebookUrl}
+                    onChange={handleChange}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="https://facebook.com/..."
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-400 mb-1">Phone Number *</label>
@@ -306,6 +345,20 @@ export default function Checkout() {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-700">
+              <label className="flex items-start cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={confirmOrder}
+                  onChange={(e) => setConfirmOrder(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-purple-600 bg-gray-900 border-gray-600 rounded focus:ring-purple-500"
+                />
+                <span className="ml-3 text-gray-300">
+                  I confirm that all my details above are correct and I want to proceed with this order.
+                </span>
+              </label>
             </div>
 
             <button
