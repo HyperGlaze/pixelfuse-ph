@@ -38,3 +38,12 @@ model Order {
   status        String   @default("Pending")
   createdAt     DateTime @default(now())
 }
+
+model SiteSetting {
+  id               String @id @default("global")
+  deliveryTaguig   Int    @default(50)
+  deliveryMakati   Int    @default(70)
+  aboutDescription String @default("Affordable pixel art accessories for students. Keychains, DIY bracelets, and more.")
+  aboutDevs        String @default("QuadCore_023 is a dedicated development group behind PixelFuse PH.")
+  facebookUrl      String @default("https://web.facebook.com/profile.php?id=61590007025954")
+}

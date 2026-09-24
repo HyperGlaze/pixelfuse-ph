@@ -26,8 +26,12 @@ export default function Checkout() {
 
   const [confirmOrder, setConfirmOrder] = useState(false);
 
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+
   useEffect(() => {
     setMounted(true);
+    
+    // Load preset
     const savedPreset = localStorage.getItem('userPreset');
     if (savedPreset) {
       try {
@@ -36,13 +40,20 @@ export default function Checkout() {
         console.error("Failed to parse user preset");
       }
     }
+
+    // Load site settings
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => setSiteSettings(data))
+      .catch(err => console.error(err));
   }, []);
 
   const [proofFile, setProofFile] = useState<File | null>(null);
 
   const getDeliveryFee = (city: string) => {
-    if (city === 'taguig') return 50;
-    if (city === 'makati') return 70;
+    if (!siteSettings) return 0;
+    if (city === 'taguig') return siteSettings.deliveryTaguig;
+    if (city === 'makati') return siteSettings.deliveryMakati;
     return 0; // meetup
   };
 
@@ -268,8 +279,8 @@ export default function Checkout() {
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="meetup">Campus Meetup (₱0)</option>
-                    <option value="taguig">Taguig Delivery (₱50)</option>
-                    <option value="makati">Makati Delivery (₱70)</option>
+                    <option value="taguig">Taguig Delivery (₱{siteSettings?.deliveryTaguig || 50})</option>
+                    <option value="makati">Makati Delivery (₱{siteSettings?.deliveryMakati || 70})</option>
                   </select>
                 </div>
               </div>

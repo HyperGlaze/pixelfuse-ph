@@ -35,6 +35,7 @@ export default function Navbar() {
             <Link href="/" className="hover:text-purple-400 transition-colors">Home</Link>
             <Link href="/shop" className="hover:text-purple-400 transition-colors">Shop</Link>
             <Link href="/history" className="hover:text-purple-400 transition-colors">Track Order</Link>
+            <Link href="/about" className="hover:text-purple-400 transition-colors">About Us</Link>
             
             <div className="flex items-center space-x-6 border-l border-gray-700 pl-6">
               <Link href="/user" className="flex items-center space-x-2 hover:text-purple-400 transition-colors" title="User Settings">
@@ -95,6 +96,13 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
             >
               Track Order
+            </Link>
+            <Link 
+              href="/about" 
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-800"
+              onClick={() => setIsOpen(false)}
+            >
+              About Us
             </Link>
             <Link 
               href="/user" 

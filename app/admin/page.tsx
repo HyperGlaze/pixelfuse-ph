@@ -7,18 +7,24 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"products" | "orders" | "account" | "categories">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "account" | "categories" | "website">("products");
   
   // Data states
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
   
   // Category Form State
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Product Form states
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   // Product Form states
   const [newProduct, setNewProduct] = useState({
@@ -92,11 +98,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        setSiteSettings(await res.json());
+      }
+    } catch (error) {
+      console.error("Error fetching settings", error);
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
       fetchOrders();
       fetchCategories();
+      fetchSettings();
     }
   }, [isAuthenticated]);
 
@@ -168,43 +189,87 @@ export default function AdminDashboard() {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productImage) {
+    if (!productImage && !editingProductId) {
       alert("Please select an image");
       return;
     }
     
     setIsSubmitting(true);
     try {
-      const fileData = new FormData();
-      fileData.append("file", productImage);
+      let url = editingProductId ? newProduct.image : "";
+      if (productImage) {
+        const fileData = new FormData();
+        fileData.append("file", productImage);
+        
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: fileData,
+        });
+        
+        if (!uploadRes.ok) throw new Error("Image upload failed");
+        const uploadData = await uploadRes.json();
+        url = uploadData.url;
+      }
       
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: fileData,
-      });
+      const payload = { ...newProduct, image: url };
       
-      if (!uploadRes.ok) throw new Error("Image upload failed");
-      const { url } = await uploadRes.json();
-      
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newProduct, image: url }),
-      });
+      let res;
+      if (editingProductId) {
+        res = await fetch(`/api/products`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, id: editingProductId }),
+        });
+      } else {
+        res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       
       if (res.ok) {
-        alert("Product added successfully!");
-        setNewProduct({ name: "", price: "", description: "", category: "" });
+        alert(`Product ${editingProductId ? 'updated' : 'added'} successfully!`);
+        setNewProduct({ name: "", price: "", description: "", category: "", image: "" } as any);
         setProductImage(null);
+        setEditingProductId(null);
         fetchProducts();
       } else {
-        alert("Error adding product");
+        alert("Error saving product");
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to add product");
+      alert("Failed to save product");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditProductClick = (product: any) => {
+    setEditingProductId(product.id);
+    setNewProduct({
+      name: product.name,
+      price: product.price,
+      description: product.description,
+      category: product.category || "",
+      image: product.image
+    } as any);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(siteSettings)
+      });
+      if (res.ok) alert("Settings saved!");
+      else alert("Failed to save settings");
+    } catch (e) {
+      console.error(e);
+      alert("Error saving settings");
     }
   };
 
@@ -259,7 +324,7 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto mt-32 p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 text-center">
+      <div className="max-w-md mx-auto mt-32 mb-32 p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 text-center">
         <h2 className="text-3xl font-extrabold text-white mb-2">Admin Portal</h2>
         <p className="text-gray-400 mb-8">Login to manage PixelFuse PH</p>
         <form onSubmit={handleLogin} className="space-y-4">
@@ -329,6 +394,15 @@ export default function AdminDashboard() {
                 <span>Tags</span>
               </button>
               <button
+                onClick={() => setActiveTab("website")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                  activeTab === "website" ? "bg-gray-800 text-purple-400" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                <span>Manage Website</span>
+              </button>
+              <button
                 onClick={() => setActiveTab("account")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                   activeTab === "account" ? "bg-gray-800 text-purple-400" : "text-gray-400 hover:text-white"
@@ -369,7 +443,18 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Add New Product</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">{editingProductId ? "Edit Product" : "Add New Product"}</h2>
+                {editingProductId && (
+                  <button onClick={() => {
+                    setEditingProductId(null);
+                    setNewProduct({ name: "", price: "", description: "", category: "", image: "" } as any);
+                    setProductImage(null);
+                  }} className="text-sm text-red-400 hover:underline">
+                    Cancel Edit
+                  </button>
+                )}
+              </div>
               <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
@@ -416,13 +501,16 @@ export default function AdminDashboard() {
                     })}
                   </div>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setProductImage(e.target.files ? e.target.files[0] : null)}
-                  className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-1.5 text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer"
-                  required
-                />
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProductImage(e.target.files ? e.target.files[0] : null)}
+                    className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-1.5 text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer"
+                    required={!editingProductId}
+                  />
+                  {editingProductId && <p className="text-xs text-gray-400">Leave file empty to keep current image.</p>}
+                </div>
                 <textarea
                   placeholder="Product Description"
                   value={newProduct.description}
@@ -436,7 +524,7 @@ export default function AdminDashboard() {
                   disabled={isSubmitting}
                   className={`bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors md:col-span-2 ${isSubmitting ? 'opacity-70' : ''}`}
                 >
-                  {isSubmitting ? 'Uploading & Adding...' : 'Save Product'}
+                  {isSubmitting ? 'Saving...' : (editingProductId ? 'Update Product' : 'Save Product')}
                 </button>
               </form>
             </div>
@@ -476,12 +564,20 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-3 text-purple-400 font-medium">₱{p.price}</td>
                         <td className="px-4 py-3">
-                          <button
-                            onClick={() => handleDeleteProduct(p.id)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-400/10 px-3 py-1.5 rounded transition-colors"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditProductClick(p)}
+                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 px-3 py-1.5 rounded transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-400/10 px-3 py-1.5 rounded transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -640,6 +736,116 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Website Settings Tab */}
+        {activeTab === "website" && (
+          <div className="max-w-3xl mx-auto space-y-6">
+            <h1 className="text-2xl font-extrabold text-white text-center mb-8">Manage Website</h1>
+            
+            {siteSettings ? (
+              <form onSubmit={handleSaveSettings} className="bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-4">Delivery Fees (₱)</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Taguig Delivery Fee</label>
+                      <input
+                        type="number"
+                        value={siteSettings.deliveryTaguig}
+                        onChange={(e) => setSiteSettings({...siteSettings, deliveryTaguig: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Makati Delivery Fee</label>
+                      <input
+                        type="number"
+                        value={siteSettings.deliveryMakati}
+                        onChange={(e) => setSiteSettings({...siteSettings, deliveryMakati: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-gray-700">
+                  <h2 className="text-xl font-bold text-white mb-4">About Us Content</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Facebook Page URL</label>
+                      <input
+                        type="url"
+                        value={siteSettings.facebookUrl}
+                        onChange={(e) => setSiteSettings({...siteSettings, facebookUrl: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Website Description</label>
+                      <textarea
+                        value={siteSettings.aboutDescription}
+                        onChange={(e) => setSiteSettings({...siteSettings, aboutDescription: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[100px]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">About the Developers (QuadCore_023)</label>
+                      <textarea
+                        value={siteSettings.aboutDevs}
+                        onChange={(e) => setSiteSettings({...siteSettings, aboutDevs: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[100px]"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  type="submit"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors mt-4"
+                >
+                  Save Website Settings
+                </button>
+              </form>
+            ) : (
+              <div className="text-center py-10 text-gray-400">Loading settings...</div>
+            )}
+            
+            {/* Danger Zone */}
+            <div className="bg-red-950/30 p-8 rounded-xl border border-red-900/50 shadow-xl mt-8">
+              <h2 className="text-xl font-bold text-red-500 mb-2">Danger Zone</h2>
+              <p className="text-red-400/70 text-sm mb-6">Irreversible actions that affect the entire website.</p>
+              
+              <button
+                onClick={async () => {
+                  if (prompt("This will DELETE ALL PRODUCTS, ORDERS, AND TAGS. Type 'CONFIRM' to proceed.") === 'CONFIRM') {
+                    try {
+                      const res = await fetch('/api/settings/reset', { method: 'POST' });
+                      if (res.ok) {
+                        alert("Database has been wiped. It is now a fresh website.");
+                        fetchProducts();
+                        fetchOrders();
+                        fetchCategories();
+                      } else {
+                        alert("Failed to wipe database.");
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      alert("Error wiping database");
+                    }
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors w-full sm:w-auto"
+              >
+                Factory Reset (Delete All Data)
+              </button>
             </div>
           </div>
         )}
