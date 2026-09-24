@@ -91,7 +91,24 @@ export default function Shop() {
       )}
 
       {loading ? (
-        <div className="text-center text-gray-400 py-10">Loading products...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <div key={n} className="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 h-[380px] animate-pulse flex flex-col">
+              <div className="h-48 w-full bg-gray-700"></div>
+              <div className="p-5 flex flex-col flex-grow">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-6 bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-6 bg-gray-700 rounded w-1/4"></div>
+                </div>
+                <div className="space-y-2 mb-4 flex-grow">
+                  <div className="h-4 bg-gray-700 rounded w-full"></div>
+                  <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+                </div>
+                <div className="h-10 w-full bg-gray-700 rounded-lg"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           <CustomProductCard />
