@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import ProductCard from '@/components/ProductCard';
 import { Filter } from 'lucide-react';
 
+import CustomProductCard from '@/components/CustomProductCard';
+
 export default function Shop() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -50,7 +52,7 @@ export default function Shop() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-4xl font-extrabold text-white mb-4">Shop</h1>
-        <p className="text-xl text-gray-400">Browse our collection of pixel art keychains and DIY kits.</p>
+        <p className="text-xl text-gray-400">Browse our collection of pixel art keychains and DIY kits, or request a custom design!</p>
       </div>
 
       {categories.length > 0 && (
@@ -90,16 +92,18 @@ export default function Shop() {
 
       {loading ? (
         <div className="text-center text-gray-400 py-10">Loading products...</div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="text-center text-gray-400 py-20 bg-gray-800/30 rounded-xl border border-gray-700/50">
-          <p className="text-xl">No products match the selected tags.</p>
-          <button onClick={() => setSelectedTags([])} className="mt-4 text-purple-400 hover:underline">Clear filters</button>
-        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <CustomProductCard />
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+          {filteredProducts.length === 0 && (
+            <div className="col-span-full text-center text-gray-400 py-20 bg-gray-800/30 rounded-xl border border-gray-700/50 mt-4">
+              <p className="text-xl">No products match the selected tags.</p>
+              <button onClick={() => setSelectedTags([])} className="mt-4 text-purple-400 hover:underline">Clear filters</button>
+            </div>
+          )}
         </div>
       )}
     </div>
