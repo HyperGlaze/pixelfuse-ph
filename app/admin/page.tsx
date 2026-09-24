@@ -32,6 +32,7 @@ export default function AdminDashboard() {
     price: "",
     description: "",
     category: "",
+    image: "",
   });
   const [productImage, setProductImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
