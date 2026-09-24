@@ -38,7 +38,13 @@ export default function Cart() {
         {items.map((item) => (
           <div key={item.id} className="flex flex-col sm:flex-row items-center justify-between bg-gray-900 p-4 rounded-lg border border-gray-700">
             <div className="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
-              <div className="w-16 h-16 bg-gray-700 rounded mr-4 flex-shrink-0"></div>
+              <div className="w-16 h-16 bg-gray-700 rounded mr-4 flex-shrink-0 overflow-hidden relative">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full text-[10px] text-gray-400 text-center p-1">No Image</div>
+                )}
+              </div>
               <div>
                 <h3 className="text-white font-medium">{item.name}</h3>
                 <p className="text-purple-400">₱{item.price}</p>

@@ -389,7 +389,14 @@ export default function Checkout() {
             
             <div className="space-y-4 max-h-[400px] overflow-y-auto mb-6 pr-2 custom-scrollbar">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start text-sm">
+                <div key={item.id} className="flex items-start text-sm">
+                  <div className="w-12 h-12 bg-gray-700 rounded mr-3 flex-shrink-0 overflow-hidden relative">
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full text-[8px] text-gray-400 text-center p-1">No Img</div>
+                    )}
+                  </div>
                   <div className="flex-1 pr-4">
                     <p className="text-white font-medium">{item.name}</p>
                     <p className="text-gray-400">Qty: {item.quantity}</p>
